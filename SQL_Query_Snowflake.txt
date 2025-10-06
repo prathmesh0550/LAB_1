@@ -1,0 +1,21 @@
+-Query to select all records from the YFINANCE_FORECAST table
+SELECT * FROM YFINANCE_FORECAST;
+
+-Query to get YFINANCE_DAILY_PRICES_ALL for symbols 'TSCO.L' and 'AAPL'
+SELECT
+  symbol,
+  date,
+  actual,
+  forecast,
+  lower_bound,
+  upper_bound
+FROM YFINANCE_DAILY_PRICES_ALL
+WHERE symbol IN ('TSCO.L', 'AAPL')
+ORDER BY
+  CASE
+    WHEN symbol = 'TSCO.L' THEN 1   
+    WHEN symbol = 'AAPL'   THEN 2
+    ELSE 3
+  END,
+  CASE WHEN forecast IS NULL THEN 1 ELSE 0 END,
+  date DESC;
