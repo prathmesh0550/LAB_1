@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.decorators import task
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 from datetime import timedelta, datetime
 import snowflake.connector
@@ -126,7 +127,19 @@ with DAG(
 
     symbols = ["TSCO.L", "AAPL"]
 
+    load_tasks = []
     for sym in symbols:
         prices = fetch_all_history(sym)
         load = load_data(prices, sym)
         prices >> load
+        load_tasks.append(load)
+
+    trigger_forecast = TriggerDagRunOperator(
+        task_id="trigger_yfinance_forecast",
+        trigger_dag_id="YFinance_Forecast",      
+        wait_for_completion=False,               
+        conf={"source_run_id": "{{ run_id }}"}   
+    )
+
+    for t in load_tasks:
+        t >> trigger_forecast
